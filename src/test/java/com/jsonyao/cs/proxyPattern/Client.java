@@ -1,5 +1,7 @@
 package com.jsonyao.cs.proxyPattern;
 
+import net.sf.cglib.proxy.Enhancer;
+
 /**
  * 代理模式
  * A. 定义:
@@ -12,7 +14,18 @@ package com.jsonyao.cs.proxyPattern;
  *      a. 静态代理: 静态代理是由程序员创建或者工具生成代理类的源码, 在编译代理类, 即所谓静态也就是程序运行前就已经存在代理类的字节码文件, 这时代理类和委托了类的关系在运行前就确定了
  *          => 注意这里说的是, 代理类和委托类之间的关系, 而不是代理类的创建
  *      b. 动态代理: 动态代理在实现阶段不用关心代理类, 而在运行阶段才指定哪一个对象
- * D. 优点:
+ * D. JDK动态代理 & CGLIB动态代理:
+ *      a. JDK动态代理: 实现InvocationHandler的处理类, 利用反射机制生成一个实现了委托类接口(可以调用被代理方法) 和 继承了Proxy类(为了
+ *         持有已经实现InvocationHandler实例的引用) 的代理类, 使得在调用代理类具体方法时去调用实现InvocationHandler接口的处理类里的方法,
+ *         但是只能对实现了接口的类生成代理
+ *      b. CGLIB动态代理: 利用ASM开源包, 通过修改委托类的Class文件的字节码生成子类来处理, 其中主要是生成的子类去覆盖原本委托类中的方法,
+ *         并在覆盖方法中实现增强, 但是因为采用的是继承, 所以对于final类或者方法是无法继承和代理的
+ *      c. Spring中的选择实现:
+ *          c.1. 如果目标对象实现了接口, 默认情况下会采用JDK动态代理实现AOP
+ *          c.2. 如果目标对象实现了接口, 还可以强制使用CGLIB实现AOP
+ *          c.3. 如果目标对象没有实现接口, 则必须采用CGLIB进行动态代理, 实现AOP
+ *              => 可以看到Spring会自动在JDK动态代理和CGLIB动态代理之间转换
+ * E. 优点:
  *      a. 职责清晰: 真实角色就是实现实际业务逻辑的, 不用去关心其他非本职的业务, 而通过后期的代理去完成那些非真实角色本职的业务, 编程简洁清晰
  *      b. 保护目标对象: 在客户端和目标对象中间存在代理对象, 起到中介以及保护目标对象的作用
  *      c. 高扩展性: 符合开闭原则, 代理类的实现不是通过修改原有的代码, 而是通过扩展的方式织入新的业务代码, 符合对修改关闭, 对扩展开放的原则
@@ -25,7 +38,7 @@ package com.jsonyao.cs.proxyPattern;
  */
 public class Client {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
         /**
          * 1、静态代理
          *      A. 概念:
@@ -55,7 +68,9 @@ public class Client {
          *          a. ClassLoader loader: 指定当前目标对象的使用类加载器
          *          b. Class<?>[] interfaces: 目标对象实现的接口类型, 使用泛型方式确认类型
          *          c. InvocationHandler h: 事件处理, 代理对象方法调用个实际处理者. 在执行目标对象的方法时, 会触发事件处理器, 把当前执行目标对象的方法作为参数传入, 供代理对象使用
-         *      D.
+         *      D. 原理:
+         *          a. newProxyInstance()通过反射生成含有接口方法的Proxy Class, 其中Proxy Class又继承了Proxy类, 父类持有实现代理接口的引用,
+         *             最后该代理对象的所有方法调用都会转发到InvocationHandler.invoke()方法, 实现动态代理
          */
 //        UserServiceImplJdkProxy userServiceImplJdkProxy = new UserServiceImplJdkProxy(new UserServiceImpl());
 //        UserService userService = (UserService) Proxy.newProxyInstance(
@@ -67,11 +82,62 @@ public class Client {
          *      A. 由例子可见, 在B.c.步中, 实现InvocationHandler接口可以通过内部类实现, 而持有委托类的引用可以通过参数传入,
          *         因此, 可以抽取公共的方法, 使用简单工厂模式构建一个动态代理类工厂
          *      B. 通过传入委托类的引用创建动态代理类工厂, 调用动态代理类工厂的getInstance()方法获取代理类对象的实例
+         *      C. 优点:
+         *          a. 通过内部类实现InvocationHandler接口, 通过工厂类newProxyInstance()可以不用再编写代理类即可获得代理对象, 简化编程
          */
         // 反编译命令 jad -s java $proxy0.class
-        System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
-        UserService userService = (UserService) new JdkProxyFactory(new UserServiceImpl()).getInstance();
-        userService.save();
+//        System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
+//        UserService userService = (UserService) new JdkProxyFactory(new UserServiceImpl()).getInstance();
+//        userService.save();
+
+        /**
+         * 4、CGLIB动态代理
+         *      A. 背景:
+         *          a. 解决没有实现任何接口的委托类的代理
+         *      B. 使用:
+         *          a. 首先实现一个MethodInterceptor, 方法调用会被转发到该类的intercept()方法
+         *          b. 然后在需要使用HelloCglib的时候, 通过CGLIB动态代理获取代理对象
+         *          c. 通过CGLIB的Enhancer来指定要代理的目标对象, 即实际处理逻辑的对象, 最终通过调用create()方法得到代理对象
+         *          d. 对这个代理对象所有非final方法的调用都会转发给MethodInterceptor.intercept()方法, 在intercept()方法里可以加入任何逻辑,
+         *             比如修改方法参数、安全检查功能等
+         *          e. 最后通过调用MethodProxy.invokeSuper()方法, 将调用转发给原始对象, 即HelloCglib的具体方法
+         *      C. 原理:
+         *          a. CGLIB是一个强大的高性能代码生成包, 底层是通过使用一个小而快的字节码处理框架ASM进行动态代理, 可以在运行期扩展Java类与实现Java接口
+         *          b. 其中Enhancer是CGLIB的字节码增强器, 可以很方便的对类进行拓展, 主要原理是把拦截器设置在了Enhancer的成员变量中
+         *          c. 创建代理对象的几个步骤:
+         *              c.1. 生成代理类的二进制字节码文件
+         *              c.2. 加载二进制字节码, 生成Class对象
+         *              c.3. 通过反射机制获得实例构造, 并创建代理类对象
+         *
+         */
+        // 初始化Enhancer实例
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(HelloCglib.class);
+        enhancer.setCallback(new MyMethodInterceptor());
+
+        HelloCglib helloCglib = (HelloCglib) enhancer.create();// 调用构造函数
+        helloCglib.hello();// final方法不会被代理
+
+        System.out.println();
+        helloCglib.helloAagin();// protect方法依然会被代理
+
+        System.out.println();
+        HelloCglib testConstructor = new HelloCglib();
+
+        System.out.println();
+        helloCglib.hashCode();
+
+        System.out.println();
+        helloCglib.equals(testConstructor);
+
+//        System.out.println();
+//        Object clone = helloCglib.clone();// clone本地方法代理后抛出CloneNotSupportedException异常
+
+        System.out.println();
+        helloCglib.toString();// 连父类的toString()方法也会代理
+
+        System.out.println();
+        helloCglib.finalize();
     }
 
 }
