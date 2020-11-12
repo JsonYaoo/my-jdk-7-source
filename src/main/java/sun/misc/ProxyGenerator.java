@@ -332,7 +332,7 @@ public class ProxyGenerator {
         // 20201111 生成Proxy Class类文件字节数组
         final byte[] classFile = gen.generateClassFile();
 
-        // 20201112 创建文件目录 & 根据字节流创建实际$proxy1.class文件
+        // 20201112 如果开启Proxy Class文件生成调试开关的话, 则创建文件目录 & 根据字节流创建实际$proxy1.class文件
         if (saveGeneratedFiles) {
             java.security.AccessController.doPrivileged(
             new java.security.PrivilegedAction<Void>() {

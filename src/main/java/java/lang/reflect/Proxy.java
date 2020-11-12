@@ -256,8 +256,12 @@ public class Proxy implements java.io.Serializable {
      *
      * @param   h the invocation handler for this proxy instance
      */
+    // 20201112 父类构造器
     protected Proxy(InvocationHandler h) {
+        // 20201112 对实现任何非公共接口的代理类进行访问检查。
         doNewInstanceCheck();
+
+        // 20201112 赋值自定义InvocationHandler
         this.h = h;
     }
 
@@ -305,6 +309,7 @@ public class Proxy implements java.io.Serializable {
      * @throws  SecurityException if a security manager exists, and
      *          the caller does not have the permission.
      */
+    // 20201112 对实现任何非公共接口的代理类进行访问检查
     private void doNewInstanceCheck() {
         SecurityManager sm = System.getSecurityManager();
         Class<?> proxyClass = this.getClass();
@@ -613,7 +618,7 @@ public class Proxy implements java.io.Serializable {
         // 20201111 Proxy Class生成逻辑
         @Override
         public Class<?> apply(ClassLoader loader, Class<?>[] interfaces) {
-            Map<Class<?>, Boolean> 压interfaceSet = new IdentityHashMap<>(interfaces.length);// 20201111 去重后的委托类实现的接口列表
+            Map<Class<?>, Boolean> interfaceSet = new IdentityHashMap<>(interfaces.length);// 20201111 去重后的委托类实现的接口列表
             for (Class<?> intf : interfaces) {
                 /*
                  * Verify that the class loader resolves the name of this
