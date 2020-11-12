@@ -19,7 +19,7 @@ package com.jsonyao.cs.proxyPattern;
  * E. Relation:
  *      a. https://baike.baidu.com/item/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/8374046?fr=aladdin
  *      b. https://www.cnblogs.com/cenyu/p/6289209.html
- *      c. https://blog.csdn.net/qq_27605885/article/details/81782916?utm_medium=distribute.pc_relevant_download.none-task-blog-baidujs-1.nonecase&depth_1-utm_source=distribute.pc_relevant_download.none-task-blog-baidujs-1.nonecase
+ *      c. http://hg.openjdk.java.net
  *      d. https://blog.csdn.net/wiseyl/article/details/14046975
  *      e. https://blog.csdn.net/xuerong_zhu/article/details/103896138/
  */
