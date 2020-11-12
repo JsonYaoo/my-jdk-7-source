@@ -71,7 +71,6 @@ public class Client {
         // 反编译命令 jad -s java $proxy0.class
         System.getProperties().put("sun.misc.ProxyGenerator.saveGeneratedFiles", "true");
         UserService userService = (UserService) new JdkProxyFactory(new UserServiceImpl()).getInstance();
-        System.out.println(userService.getClass());
         userService.save();
     }
 
