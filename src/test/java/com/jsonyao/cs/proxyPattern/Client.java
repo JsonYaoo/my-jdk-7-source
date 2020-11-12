@@ -108,7 +108,6 @@ public class Client {
          *              c.1. 生成代理类的二进制字节码文件
          *              c.2. 加载二进制字节码, 生成Class对象
          *              c.3. 通过反射机制获得实例构造, 并创建代理类对象
-         *
          */
         // 初始化Enhancer实例
         Enhancer enhancer = new Enhancer();
