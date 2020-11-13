@@ -17,12 +17,14 @@ package net.sf.cglib.core;
 
 import org.objectweb.asm.ClassWriter;
 
+// 20201113 DefaultGeneratorStrategy是CGLIB提供的一个默认的生成策略
 public class DefaultGeneratorStrategy implements GeneratorStrategy {
-    public static final DefaultGeneratorStrategy INSTANCE = new DefaultGeneratorStrategy();
-    
+    public static final DefaultGeneratorStrategy INSTANCE = new DefaultGeneratorStrategy();// 20201113 单例
+
+    // 20201113 生成代理类的字节码, 传入具体的ClassGenerator引用, 即Enhancer实例
     public byte[] generate(ClassGenerator cg) throws Exception {
         ClassWriter cw = getClassWriter();
-        transform(cg).generateClass(cw);
+        transform(cg).generateClass(cw);// 20201113 通过调用具体ClassGenerator实现的generateClass来生成代理类的字节码
         return transform(cw.toByteArray());
     }
 

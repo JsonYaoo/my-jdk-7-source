@@ -25,6 +25,7 @@ package net.sf.cglib.core;
  * protected method.
  * @see AbstractClassGenerator#setStrategy
  */
+// 20201113 生成字节码的策略接口
 public interface GeneratorStrategy {
     /**
      * Generate the class.

@@ -29,22 +29,24 @@ import java.util.Set;
  */
 public class DefaultNamingPolicy implements NamingPolicy {
     public static final DefaultNamingPolicy INSTANCE = new DefaultNamingPolicy();
-    
+
+    // 20201113 根据参数组装ClassName -> 默认名称格式: 被代理class name + "$$" + class generator name + "ByCGLIB" + "$$" + key的hashcode
     public String getClassName(String prefix, String source, Object key, Predicate names) {
         if (prefix == null) {
             prefix = "net.sf.cglib.empty.Object";
         } else if (prefix.startsWith("java")) {
-            prefix = "$" + prefix;
+            prefix = "$" + prefix;// 20201113 设置$前缀
         }
+
         String base =
-            prefix + "$$" + 
-            source.substring(source.lastIndexOf('.') + 1) +
-            getTag() + "$$" +
-            Integer.toHexString(key.hashCode());
+            prefix + "$$" + // 设置被代理ClassName$$
+            source.substring(source.lastIndexOf('.') + 1) +// 20201113 设置Class Generator的name, CGLIB动态代理时, name => net.sf.cglib.proxy.Enhancer
+            getTag() + "$$" +// 设置ByCGLIB&&
+            Integer.toHexString(key.hashCode());// 20201113 设置multi-values生成的key的hashCode作为版本号
         String attempt = base;
         int index = 2;
         while (names.evaluate(attempt))
-            attempt = base + "_" + index++;
+            attempt = base + "_" + index++;// 20201113 文件重名, 则文件名自动添加上"_2"
         return attempt;
     }
 

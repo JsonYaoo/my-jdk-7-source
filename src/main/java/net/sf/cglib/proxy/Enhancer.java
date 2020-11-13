@@ -60,6 +60,7 @@ import org.objectweb.asm.Label;
  * For an almost drop-in replacement for
  * <code>java.lang.reflect.Proxy</code>, see the {@link Proxy} class.
  */
+// 20201113 每个Class Generator都必须实现AbstractClassGenerator接口, 和它父接口的generateClass(ClassVisitor v)方法用来生成所需要的类
 public class Enhancer extends AbstractClassGenerator
 {
     private static final CallbackFilter ALL_ZERO = new CallbackFilter(){
@@ -68,7 +69,7 @@ public class Enhancer extends AbstractClassGenerator
         }
     };
 
-    private static final Source SOURCE = new Source(Enhancer.class.getName());
+    private static final Source SOURCE = new Source(Enhancer.class.getName());// 20201113 代表用Enhancer来生成增强(代理)类, name => net.sf.cglib.proxy.Enhancer
     private static final EnhancerKey KEY_FACTORY =
       (EnhancerKey)KeyFactory.create(EnhancerKey.class);
 
@@ -125,6 +126,7 @@ public class Enhancer extends AbstractClassGenerator
     /** Internal interface, only public due to ClassLoader issues. */
     // 20201112 内部接口, 仅由于ClassLoader问题而公开
     public interface EnhancerKey {
+        // 20201113 生成标识生成类的key值 -> 提供内部接口 & newInstance()方法 & multi-value结构入参 -> 构造出multi-values key对象
         public Object newInstance(String type,
                                   String[] interfaces,
                                   CallbackFilter filter,
@@ -399,7 +401,8 @@ public class Enhancer extends AbstractClassGenerator
         }
 
         // 20201112 父类为空时使用接口 & 使用工厂创建 & 允许进行拦截
-        // 20201112
+        // 20201113 每个生成类在缓存中都会有一个multi-valus key对象与之对应, 对于简单的类可以用类名作为key, 而动态代理不仅与委托类有关, 还与使用的拦截器、回调函数过滤器有关, 因此使用multi-values来标识这个类
+        // 20201113 使用父类、接口、过滤器、回调寒素、版本号等信息生成标识类的key -> 构造出multi-values key对象
         return super.create(KEY_FACTORY.newInstance((superclass != null) ? superclass.getName() : null,
                                                     ReflectUtils.getNames(interfaces),
                                                     filter,
@@ -442,10 +445,16 @@ public class Enhancer extends AbstractClassGenerator
         getMethods(superclass, interfaces, methods, null, null);
     }
 
+    // 20201113 添加父类、接口等方法
     private static void getMethods(Class superclass, Class[] interfaces, List methods, List interfaceMethods, Set forcePublic)
     {
+        // 20201113 添加父类所有方法到Method列表中
         ReflectUtils.addAllMethods(superclass, methods);
+
+        // 20201113 获取接口方法
         List target = (interfaceMethods != null) ? interfaceMethods : methods;
+
+        // 20201113 遍历添加接口方法
         if (interfaces != null) {
             for (int i = 0; i < interfaces.length; i++) {
                 if (interfaces[i] != Factory.class) {
@@ -459,28 +468,41 @@ public class Enhancer extends AbstractClassGenerator
             }
             methods.addAll(interfaceMethods);
         }
+
+        // 20201113 过滤掉Static、protected、重复的、Final的方法
         CollectionUtils.filter(methods, new RejectModifierPredicate(Constants.ACC_STATIC));
         CollectionUtils.filter(methods, new VisibilityPredicate(superclass, true));
         CollectionUtils.filter(methods, new DuplicatesPredicate());
         CollectionUtils.filter(methods, new RejectModifierPredicate(Constants.ACC_FINAL));
     }
 
+    // 20201113 用来生成所需要的类
     public void generateClass(ClassVisitor v) throws Exception {
+        // 20201113 父类为空, 则设置本身为父类
         Class sc = (superclass == null) ? Object.class : superclass;
 
+        // 20201113 父类模数为final, 则抛出异常
         if (TypeUtils.isFinal(sc.getModifiers()))
             throw new IllegalArgumentException("Cannot subclass final class " + sc);
+
+        // 20201113 获取父类所有的构造器
         List constructors = new ArrayList(Arrays.asList(sc.getDeclaredConstructors()));
+
+        // 20201113 过滤父类私有构造器
         filterConstructors(sc, constructors);
 
         // Order is very important: must add superclass, then
         // its superclass chain, then each interface and
         // its superinterfaces.
+        // 20201113 添加顺序非常重要: 父类 -> 其他父类链 -> 接口 -> 父接口
         List actualMethods = new ArrayList();
         List interfaceMethods = new ArrayList();
         final Set forcePublic = new HashSet();
+
+        // 20201113 添加父类、接口等方法
         getMethods(sc, interfaces, actualMethods, interfaceMethods, forcePublic);
 
+        // 20201113 遍历添加到的所有方法, 使用反射获取方法详情存储到methods中
         List methods = CollectionUtils.transform(actualMethods, new Transformer() {
             public Object transform(Object value) {
                 Method method = (Method)value;
@@ -492,21 +514,26 @@ public class Enhancer extends AbstractClassGenerator
                 if (forcePublic.contains(MethodWrapper.create(method))) {
                     modifiers = (modifiers & ~Constants.ACC_PROTECTED) | Constants.ACC_PUBLIC;
                 }
+                // 20201113 反射获取方法详情
                 return ReflectUtils.getMethodInfo(method, modifiers);
             }
         });
 
+        // 20201113 生成ClassInfo -> ClassEmitter开始构造类
         ClassEmitter e = new ClassEmitter(v);
         e.begin_class(Constants.V1_2,
                       Constants.ACC_PUBLIC,
-                      getClassName(),
+                      getClassName(),// 20201113 调用AbstractClassGenerator.getClassName()方法生成className
                       Type.getType(sc),
                       (useFactory ?
                        TypeUtils.add(TypeUtils.getTypes(interfaces), FACTORY) :
                        TypeUtils.getTypes(interfaces)),
                       Constants.SOURCE_FILE);
+
+        // 20201113 生成构造器info
         List constructorInfo = CollectionUtils.transform(constructors, MethodInfoTransformer.getInstance());
 
+        // 20201113 生成FieldInfo
         e.declare_field(Constants.ACC_PRIVATE, BOUND_FIELD, Type.BOOLEAN_TYPE, null);
         if (!interceptDuringConstruction) {
             e.declare_field(Constants.ACC_PRIVATE, CONSTRUCTED_FIELD, Type.BOOLEAN_TYPE, null);
@@ -521,6 +548,7 @@ public class Enhancer extends AbstractClassGenerator
             e.declare_field(Constants.ACC_PRIVATE, getCallbackField(i), callbackTypes[i], null);
         }
 
+        // 20201113 写入普通方法、构造方法、回调方法
         emitMethods(e, methods, actualMethods);
         emitConstructors(e, constructorInfo);
         emitSetThreadCallbacks(e);
@@ -538,10 +566,12 @@ public class Enhancer extends AbstractClassGenerator
             emitSetCallbacks(e);
         }
 
+        // 20201113 生成代理对象Class
         e.end_class();
     }
 
     /**
+     * // 20201113 从父类类中筛选构造函数列表, 剩下的构造函数将包含在生成的类中. 默认实现是过滤掉所有私有构造函数, 但是子类可以扩展增强器来覆盖它的行为
      * Filter the list of constructors from the superclass. The
      * constructors which remain will be included in the generated
      * class. The default implementation is to filter out all private
@@ -557,6 +587,7 @@ public class Enhancer extends AbstractClassGenerator
             throw new IllegalArgumentException("No visible constructors in " + sc);
     }
 
+    // 20201113 根据代理类Class注入实现的MethodInterceptor实例
     protected Object firstInstance(Class type) throws Exception {
         if (classOnly) {
             return type;
@@ -634,7 +665,9 @@ public class Enhancer extends AbstractClassGenerator
         }
     }
 
+    // 20201113 设置回调函数
     private static void setThreadCallbacks(Class type, Callback[] callbacks) {
+        // 20201113 设置回调函数
         setCallbacksHelper(type, callbacks, SET_THREAD_CALLBACKS_NAME);
     }
 
@@ -656,7 +689,9 @@ public class Enhancer extends AbstractClassGenerator
         return type.getDeclaredMethod(methodName, new Class[]{ Callback[].class });
     }
 
+    // 20201113 根据代理类Class注入实现的MethodInterceptor实例
     private Object createUsingReflection(Class type) {
+        // 20201113 设置回调函数, 其中MethodInterceptor实现了Callback接口, 实际上callback就是实现的MethodInterceptor实例
         setThreadCallbacks(type, callbacks);
         try{
         

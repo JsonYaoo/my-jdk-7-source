@@ -51,23 +51,37 @@ import org.objectweb.asm.Type;
  *
  * @version $Id: KeyFactory.java,v 1.26 2006/03/05 02:43:19 herbyderby Exp $
  */
+// 20201113 生成标识唯一键的multi-values抽象工厂类
 abstract public class KeyFactory {
+    // 20201113 getName()签名
     private static final Signature GET_NAME =
       TypeUtils.parseSignature("String getName()");
+
+    // 2020113 getClass()签名
     private static final Signature GET_CLASS =
       TypeUtils.parseSignature("Class getClass()");
+
+    // 20201113 类的hashCode()签名
     private static final Signature HASH_CODE =
       TypeUtils.parseSignature("int hashCode()");
+
+    // 20201113 equals()签名
     private static final Signature EQUALS =
       TypeUtils.parseSignature("boolean equals(Object)");
+
+    // 20201113 toString()签名
     private static final Signature TO_STRING =
       TypeUtils.parseSignature("String toString()");
+
+    // 20201113 append()签名
     private static final Signature APPEND_STRING =
       TypeUtils.parseSignature("StringBuffer append(String)");
+
+    // 20201113 net.sf.cglib.core.KeyFactory
     private static final Type KEY_FACTORY =
       TypeUtils.parseType("net.sf.cglib.core.KeyFactory");
     
-    //generated numbers: 
+    //generated numbers: // 20201113 素数 -> 生成类的序号
     private final static int PRIMES[] = {
                11,         73,        179,       331,
               521,        787,       1213,      1823,

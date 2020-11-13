@@ -29,14 +29,14 @@ import org.objectweb.asm.Type;
  * customizing the <code>ClassLoader</code>, name of the generated class, and transformations
  * applied before generation.
  */
-abstract public class AbstractClassGenerator
-implements ClassGenerator
+// 20201113 AbstractClassGenerator采用模板方法设计模式, create(Object key)就是模板方法, 定义了类生成的策略, 没有实现ClassGenerator的generateClass()方法, 所以为抽象类
+abstract public class AbstractClassGenerator implements ClassGenerator
 {
     private static final Object NAME_KEY = new Object();
     private static final ThreadLocal CURRENT = new ThreadLocal();
 
-    private GeneratorStrategy strategy = DefaultGeneratorStrategy.INSTANCE;
-    private NamingPolicy namingPolicy = DefaultNamingPolicy.INSTANCE;
+    private GeneratorStrategy strategy = DefaultGeneratorStrategy.INSTANCE;// 20201113 DefaultGeneratorStrategy是CGLIB提供的一个默认的生成策略
+    private NamingPolicy namingPolicy = DefaultNamingPolicy.INSTANCE;// 20201113 默认命名策略
     private Source source;
     private ClassLoader classLoader;
     private String namePrefix;
@@ -45,14 +45,16 @@ implements ClassGenerator
     private String className;
     private boolean attemptLoad;
 
+    // 20201113 Source是AbstractClassGenerator的一个静态内部类
     protected static class Source {
         String name;
-        Map cache = new WeakHashMap();
+        Map cache = new WeakHashMap();// 20201113 Cache是缓存, WeakHashMap -> <ClassLoader, <Object, class>>, 类加载器缓存, 同JDK动态代理
         public Source(String name) {
-            this.name = name;
+            this.name = name;// 20201113 name用来记录Class Generator
         }
     }
 
+    // 20201113 AbstractClassGenerator唯一一个构造函数
     protected AbstractClassGenerator(Source source) {
         this.source = source;
     }
@@ -61,17 +63,19 @@ implements ClassGenerator
         this.namePrefix = namePrefix;
     }
 
+    // 20201113 Enhancer.generateClass()调用AbstractClassGenerator.getClassName()方法生成className
     final protected String getClassName() {
         if (className == null)
-            className = getClassName(getClassLoader());
+            className = getClassName(getClassLoader());// 20201113 如果成员变量name为空, 根据类加载器获取ClassName
         return className;
     }
 
+    // 20201113 根据类加载器获取ClassName
     private String getClassName(final ClassLoader loader) {
-        final Set nameCache = getClassNameCache(loader);
-        return namingPolicy.getClassName(namePrefix, source.name, key, new Predicate() {
+        final Set nameCache = getClassNameCache(loader);// 20201113 根据类加载器从缓存中获取ClassName
+        return namingPolicy.getClassName(namePrefix, source.name, key, new Predicate() {// 调用默认命名策略获取ClassName
             public boolean evaluate(Object arg) {
-                return nameCache.contains(arg);
+                return nameCache.contains(arg);//20201113 根据参数判断名称缓存中是否存在该ClassName
             }
         });
     }
@@ -183,10 +187,10 @@ implements ClassGenerator
 
     abstract protected ClassLoader getDefaultClassLoader();
 
-    // 20201112 根据特定键生成代理对象
+    // 20201113 缓存的使用: 生成的缓存是按照ClassLoader来划分的, 不同的类被不同的ClassLoader加载也是不同的
     protected Object create(Object key) {
         try {
-            // 20201112 最终代理对象
+            // 20201112 代理对象Class, 每个生成类在缓存中都会有一个multi-valus key对象与之对应, 对于简单的类可以用类名作为key, 而动态代理不仅与委托类有关, 还与使用的拦截器、回调函数过滤器有关, 因此使用multi-values来标识这个类
         	Class gen = null;
 
             synchronized (source) {
@@ -200,7 +204,7 @@ implements ClassGenerator
                 // 20201112 缓存为空时, 创建类加载器缓存
                 if (cache2 == null) {
                     cache2 = new HashMap();
-                    cache2.put(NAME_KEY, new HashSet());
+                    cache2.put(NAME_KEY, new HashSet());// 20201113 每个ClassLoader的缓存中都会有一个NAME_KEY, 用来对Class Name进行去重 -> 生成类命名策略
                     source.cache.put(loader, cache2);
                 } else if (useCache) {
                     // 20201112 如果开启了从缓存中获取, 则根据特殊键从缓存获取实例
@@ -208,7 +212,7 @@ implements ClassGenerator
                     gen = (Class) (( ref == null ) ? null : ref.get()); 
                 }
 
-                // 20201112 如果从缓存获取不到代理对象
+                // 20201112 如果从缓存获取不到
                 if (gen == null) {
                     // 20201112 则先获取本地线程save
                     Object save = CURRENT.get();

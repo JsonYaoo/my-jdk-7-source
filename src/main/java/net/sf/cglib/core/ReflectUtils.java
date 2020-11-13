@@ -396,27 +396,31 @@ public class ReflectUtils {
         return 0;
     }
 
+    // 20201113 反射获取方法详情
     public static MethodInfo getMethodInfo(final Member member, final int modifiers) {
+        // 20201113 获取方法签名
         final Signature sig = getSignature(member);
+
+        // 20201113 构建方法详情
         return new MethodInfo() {
-            private ClassInfo ci;
+            private ClassInfo ci;// 20201113 类详情
             public ClassInfo getClassInfo() {
                 if (ci == null)
-                    ci = ReflectUtils.getClassInfo(member.getDeclaringClass());
+                    ci = ReflectUtils.getClassInfo(member.getDeclaringClass());// 20201113 获取类详情
                 return ci;
             }
             public int getModifiers() {
                 return modifiers;
-            }
+            }// 20201113 方法模数
             public Signature getSignature() {
                 return sig;
-            }
+            }// 20201113 方法签名
             public Type[] getExceptionTypes() {
                 return ReflectUtils.getExceptionTypes(member);
-            }
+            }// 20201113 方法异常
             public Attribute getAttribute() {
                 return null;
-            }
+            }// 20201113 方法属性
         };
     }
 
@@ -444,6 +448,7 @@ public class ReflectUtils {
     }
 
     // used by MethodInterceptorGenerated generated code
+    // 20201113 由MethodInterceptor使用
     public static Method[] findMethods(String[] namesAndDescriptors, Method[] methods)
     {
         Map map = new HashMap();

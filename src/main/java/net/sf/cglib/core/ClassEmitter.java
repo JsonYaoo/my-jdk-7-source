@@ -58,6 +58,7 @@ public class ClassEmitter extends ClassAdapter {
         return classInfo;
     }
 
+    // 20201113 生成ClassInfo
     public void begin_class(int version, final int access, String className, final Type superType, final Type[] interfaces, String source) {
         final Type classType = Type.getType("L" + className.replace('.', '/') + ";");
         classInfo = new ClassInfo() {

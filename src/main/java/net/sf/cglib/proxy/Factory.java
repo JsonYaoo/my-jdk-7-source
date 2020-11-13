@@ -24,6 +24,7 @@ package net.sf.cglib.proxy;
  * @author Juozas Baliuka <a href="mailto:baliuka@mwm.lt">baliuka@mwm.lt</a>
  * @version $Id: Factory.java,v 1.13 2004/06/24 21:15:20 herbyderby Exp $
  */
+// 20201113 FastClass机制Factory, 访问时比Enhancer重新生成或者反射访问方法都要快
 public interface Factory {
     /**
      * Creates new instance of the same type, using the no-arg constructor.

@@ -1,5 +1,6 @@
 package com.jsonyao.cs.proxyPattern;
 
+import net.sf.cglib.core.DebuggingClassWriter;
 import net.sf.cglib.proxy.Enhancer;
 
 /**
@@ -35,6 +36,7 @@ import net.sf.cglib.proxy.Enhancer;
  *      c. http://hg.openjdk.java.net
  *      d. https://blog.csdn.net/wiseyl/article/details/14046975
  *      e. https://blog.csdn.net/xuerong_zhu/article/details/103896138/
+ *      f. https://www.cnblogs.com/cruze/p/3843996.html
  */
 public class Client {
 
@@ -109,6 +111,8 @@ public class Client {
          *              c.2. 加载二进制字节码, 生成Class对象
          *              c.3. 通过反射机制获得实例构造, 并创建代理类对象
          */
+        System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, ".\\cglib\\classes");
+
         // 初始化Enhancer实例
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(HelloCglib.class);
