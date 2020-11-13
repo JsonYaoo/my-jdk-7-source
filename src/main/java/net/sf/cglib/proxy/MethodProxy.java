@@ -202,10 +202,13 @@ public class MethodProxy {
      * @throws Throwable the bare exceptions thrown by the called method are passed through
      * without wrapping in an <code>InvocationTargetException</code>
      */
+    // 20201112 原委托类equals方法
     public Object invoke(Object obj, Object[] args) throws Throwable {
         try {
             init();
             FastClassInfo fci = fastClassInfo;
+
+            // 20201113 实际是调用对应代理类的FastClass f1的invoke方法, invoke方法则调用原委托类的equals方法
             return fci.f1.invoke(fci.i1, obj, args);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
