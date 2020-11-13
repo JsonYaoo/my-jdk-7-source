@@ -20,20 +20,21 @@ package net.sf.cglib.proxy;
  * @author Juozas Baliuka <a href="mailto:baliuka@mwm.lt">baliuka@mwm.lt</a>
  * @version $Id: MethodInterceptor.java,v 1.8 2004/06/24 21:15:20 herbyderby Exp $
  */
-public interface MethodInterceptor
-extends Callback
+// 20201113 方法拦截器接口继承了Callback接口
+public interface MethodInterceptor extends Callback
 {
     /**
+     * // 20201113 所有生成的代理方法都调用此方法, 而不是原始方法. 原始方法可以通过使用method对象进行普通反射调用, 也可以通过MethodProxy（更快）来调用
      * All generated proxied methods call this method instead of the original method.
      * The original method may either be invoked by normal reflection using the Method object,
      * or by using the MethodProxy (faster).
-     * @param obj "this", the enhanced object
-     * @param method intercepted Method
-     * @param args argument array; primitive types are wrapped
-     * @param proxy used to invoke super (non-intercepted method); may be called
+     * @param obj "this", the enhanced object // 20201113 增强后的代理对象
+     * @param method intercepted Method // 20201113 原始方法
+     * @param args argument array; primitive types are wrapped // 20201113 参数数组, 与JDK动态代理那样只是在equal等方法时用到?
+     * @param proxy used to invoke super (non-intercepted method); may be called // 20201113 使用invokeSuper非增强方法来调用原始方法
      * as many times as needed
-     * @throws Throwable any exception may be thrown; if so, super method will not be invoked
-     * @return any value compatible with the signature of the proxied method. Method returning void will ignore this value.
+     * @throws Throwable any exception may be thrown; if so, super method will not be invoked // 20201113 抛出异常时, 原始方法将不再被执行
+     * @return any value compatible with the signature of the proxied method. Method returning void will ignore this value. // 20201113 返回值与原始方法一样
      * @see MethodProxy
      */    
     public Object intercept(Object obj, java.lang.reflect.Method method, Object[] args,
