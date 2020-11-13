@@ -44,17 +44,20 @@ public class MethodProxy {
      * For internal use by {@link Enhancer} only; see the {@link net.sf.cglib.reflect.FastMethod} class
      * for similar functionality.
      */
+    // 20201113 初始化MethodProxy成员变量
     public static MethodProxy create(Class c1, Class c2, String desc, String name1, String name2) {
         MethodProxy proxy = new MethodProxy();
-        proxy.sig1 = new Signature(name1, desc);
-        proxy.sig2 = new Signature(name2, desc);
-        proxy.createInfo = new CreateInfo(c1, c2);
+        proxy.sig1 = new Signature(name1, desc);// 20201113 设置原委托类equals()方法的方法签名
+        proxy.sig2 = new Signature(name2, desc);// 20201113 设置代理类CGLIB$equals$1()方法的方法签名
+        proxy.createInfo = new CreateInfo(c1, c2);// 20201113 初始化当前线程的ClassGenerator -> Enhancer
         return proxy;
     }
 
+    // 20201113 初始化FastClass
     private void init()
     {
-        /* 
+        // 20201113 使用volatile FastClassInfo使我们能够原子地初始化FastClass
+        /*
          * Using a volatile invariant allows us to initialize the FastClass and
          * method index pairs atomically.
          * 
@@ -64,30 +67,32 @@ public class MethodProxy {
          */
         if (fastClassInfo == null)
         {
+            // 20201113 初始化FastClass时加锁, 双重检查锁保证线程安全
             synchronized (initLock)
             {
                 if (fastClassInfo == null)
                 {
                     CreateInfo ci = createInfo;
 
-                    FastClassInfo fci = new FastClassInfo();
-                    fci.f1 = helper(ci, ci.c1);
-                    fci.f2 = helper(ci, ci.c2);
-                    fci.i1 = fci.f1.getIndex(sig1);
-                    fci.i2 = fci.f2.getIndex(sig2);
-                    fastClassInfo = fci;
+                    FastClassInfo fci = new FastClassInfo();// 20201113 持有生成FastClass的参数
+                    fci.f1 = helper(ci, ci.c1);// 20201113 生册原委托类的FastClass
+                    fci.f2 = helper(ci, ci.c2);// 20201113 生成代理类的FastClass
+                    fci.i1 = fci.f1.getIndex(sig1); // 20201113 根据原委托类equals()的方法签名获取方法在FastClass索引
+                    fci.i2 = fci.f2.getIndex(sig2);// 20201113 根据代理类CGLIB$equals$1()方法的方法签名获取方法FastClass索引
+                    fastClassInfo = fci;// 20201113 设置FastClass成员变量
                     createInfo = null;
                 }
             }
         }
     }
 
+    // 20201113 MethodProxy根据loadClass2和loadClass1进行分析并生成FastClass, 然后再使用getIndex()来获取equals()方法和CGLIB$equals$1()代理方法的索引
     private static class FastClassInfo
     {
-        FastClass f1;
-        FastClass f2;
-        int i1;
-        int i2;
+        FastClass f1;// 20201113 原委托类的FastClass
+        FastClass f2;// 20201113 代理类的FastClass
+        int i1;// 20201113 equals()方法在f1中的索引
+        int i2;// 20201113 CGLIB$equals$1()方法在f2中的索引
     }
 
     private static class CreateInfo
@@ -102,23 +107,23 @@ public class MethodProxy {
         {
             this.c1 = c1;
             this.c2 = c2;
-            AbstractClassGenerator fromEnhancer = AbstractClassGenerator.getCurrent();
+            AbstractClassGenerator fromEnhancer = AbstractClassGenerator.getCurrent();// 20201113 获取当前线程的ClassGenerator -> Enhancer
             if (fromEnhancer != null) {
-                namingPolicy = fromEnhancer.getNamingPolicy();
-                strategy = fromEnhancer.getStrategy();
-                attemptLoad = fromEnhancer.getAttemptLoad();
+                namingPolicy = fromEnhancer.getNamingPolicy();// 20201113 默认命名策略
+                strategy = fromEnhancer.getStrategy();// 20201113 默认生成策略
+                attemptLoad = fromEnhancer.getAttemptLoad();// 20201113 尝试加载标志
             }
         }
     }
 
     private static FastClass helper(CreateInfo ci, Class type) {
-        FastClass.Generator g = new FastClass.Generator();
-        g.setType(type);
-        g.setClassLoader(ci.c2.getClassLoader());
-        g.setNamingPolicy(ci.namingPolicy);
-        g.setStrategy(ci.strategy);
-        g.setAttemptLoad(ci.attemptLoad);
-        return g.create();
+        FastClass.Generator g = new FastClass.Generator();// 20201113 获取FastClss的Class Generator
+        g.setType(type);// 20201113 设置类型
+        g.setClassLoader(ci.c2.getClassLoader());// 20201113 设置类加载器
+        g.setNamingPolicy(ci.namingPolicy);// 20201113 设置命名策略
+        g.setStrategy(ci.strategy);// 20201113 设置生成策略
+        g.setAttemptLoad(ci.attemptLoad);// 20201113 尝试加载标志
+        return g.create();// 20201113 生成对应FastClass
     }
 
     private MethodProxy() {
@@ -221,10 +226,17 @@ public class MethodProxy {
      * @throws Throwable the bare exceptions thrown by the called method are passed through
      * without wrapping in an <code>InvocationTargetException</code>
      */
+    // 20201113 MyMethodHandler实现类调用invokeSuper方法
+    // => 代理类通过调用持有MethodInterceptor实现类引用的intercept(), 然后调用methodProxy.invokeSuper()根据FastClass索引调用到代理类的增强方法,
+    // 增强方法则又调用父类的equals(), 对比JDK动态代理中, 代理类通过调用InvocationHandler中的invoke(), 然后再反射调用原委托类的equals(),
+    // 可以避免了反射调用, 提高了效率
     public Object invokeSuper(Object obj, Object[] args) throws Throwable {
         try {
+            // 20201113 初始化FastClass
             init();
             FastClassInfo fci = fastClassInfo;
+
+            // 20201113 实际是调用对应代理类的FastClass f2的invoke方法, invoke方法则调用代理类的CGLIB$equals$1(), CGLIB$equals$1()则又是直接调用原委托类的equals方法
             return fci.f2.invoke(fci.i2, obj, args);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();

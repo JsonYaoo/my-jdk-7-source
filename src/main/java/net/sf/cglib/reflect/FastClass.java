@@ -48,7 +48,7 @@ abstract public class FastClass
 
     public static class Generator extends AbstractClassGenerator
     {
-        private static final Source SOURCE = new Source(FastClass.class.getName());
+        private static final Source SOURCE = new Source(FastClass.class.getName());// 20201113 FastClass的Class Name
         private Class type;
         
         public Generator() {
