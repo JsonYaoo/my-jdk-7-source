@@ -208,7 +208,8 @@ public class MethodProxy {
             init();
             FastClassInfo fci = fastClassInfo;
 
-            // 20201113 实际是调用对应代理类的FastClass f1的invoke方法, invoke方法则调用原委托类的equals方法
+            // 20201113 实际是调用对应代理类的FastClass f1 HelloCglib$$FastClassByCGLIB$$177ae519.class的invoke方法, invoke方法则调用原委托类的equals方法
+            // 20201114 其中f1只包含原委托类的public非final方法
             return fci.f1.invoke(fci.i1, obj, args);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
@@ -231,7 +232,7 @@ public class MethodProxy {
      */
     // 20201113 MyMethodHandler实现类调用invokeSuper方法
     // => 代理类通过调用持有MethodInterceptor实现类引用的intercept(), 然后调用methodProxy.invokeSuper()根据FastClass索引调用到代理类的增强方法,
-    // 增强方法则又调用父类的equals(), 对比JDK动态代理中, 代理类通过调用InvocationHandler中的invoke(), 然后再反射调用原委托类的equals(),
+    // 增强方法CGLIB$equals$1()则又调用父类(原委托类)的equals(), 对比JDK动态代理中, 代理类通过调用InvocationHandler中的invoke(), 然后再反射调用原委托类的equals(),
     // 可以避免了反射调用, 提高了效率
     public Object invokeSuper(Object obj, Object[] args) throws Throwable {
         try {
@@ -239,7 +240,8 @@ public class MethodProxy {
             init();
             FastClassInfo fci = fastClassInfo;
 
-            // 20201113 实际是调用对应代理类的FastClass f2的invoke方法, invoke方法则调用代理类的CGLIB$equals$1(), CGLIB$equals$1()则又是直接调用原委托类的equals方法
+            // 20201113 实际是调用对应代理类的FastClass f2 HelloCglib$$EnhancerByCGLIB$$6bf7bfad$$FastClassByCGLIB$$9448a271.class的invoke方法,
+            // 20201113 invoke方法则调用代理类的CGLIB$equals$1(), CGLIB$equals$1()则又是直接调用父类(原委托类)的equals方法
             return fci.f2.invoke(fci.i2, obj, args);
         } catch (InvocationTargetException e) {
             throw e.getTargetException();

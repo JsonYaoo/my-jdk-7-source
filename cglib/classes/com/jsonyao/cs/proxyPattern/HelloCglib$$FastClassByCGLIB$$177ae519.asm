@@ -41,7 +41,7 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
     LDC "wait(JI)V"
     INVOKEVIRTUAL java/lang/Object.equals (Ljava/lang/Object;)Z
     IFEQ L11
-    ICONST_4
+    ICONST_5
     IRETURN
    L2
     LDC "hello()V"
@@ -53,7 +53,7 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
     LDC "wait(J)V"
     INVOKEVIRTUAL java/lang/Object.equals (Ljava/lang/Object;)Z
     IFEQ L11
-    ICONST_5
+    BIPUSH 6
     IRETURN
    L4
     LDC "notifyAll()V"
@@ -65,7 +65,7 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
     LDC "wait()V"
     INVOKEVIRTUAL java/lang/Object.equals (Ljava/lang/Object;)Z
     IFEQ L11
-    BIPUSH 6
+    ICONST_4
     IRETURN
    L6
     LDC "equals(Ljava/lang/Object;)Z"
@@ -181,7 +181,7 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
       default: L20
    L17
     POP
-    BIPUSH 6
+    ICONST_4
     IRETURN
    L18
     DUP
@@ -192,7 +192,7 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
     INVOKEVIRTUAL java/lang/Object.equals (Ljava/lang/Object;)Z
     IFEQ L12
     POP
-    ICONST_5
+    BIPUSH 6
     IRETURN
    L19
     DUP
@@ -210,7 +210,7 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
     INVOKEVIRTUAL java/lang/Object.equals (Ljava/lang/Object;)Z
     IFEQ L12
     POP
-    ICONST_4
+    ICONST_5
     IRETURN
    L20
     GOTO L12
@@ -350,6 +350,10 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
     ACONST_NULL
     ARETURN
    L6
+    INVOKEVIRTUAL com/jsonyao/cs/proxyPattern/HelloCglib.wait ()V
+    ACONST_NULL
+    ARETURN
+   L7
     ALOAD 3
     ICONST_0
     AALOAD
@@ -363,17 +367,13 @@ public class com/jsonyao/cs/proxyPattern/HelloCglib$$FastClassByCGLIB$$177ae519 
     INVOKEVIRTUAL com/jsonyao/cs/proxyPattern/HelloCglib.wait (JI)V
     ACONST_NULL
     ARETURN
-   L7
+   L8
     ALOAD 3
     ICONST_0
     AALOAD
     CHECKCAST java/lang/Number
     INVOKEVIRTUAL java/lang/Number.longValue ()J
     INVOKEVIRTUAL com/jsonyao/cs/proxyPattern/HelloCglib.wait (J)V
-    ACONST_NULL
-    ARETURN
-   L8
-    INVOKEVIRTUAL com/jsonyao/cs/proxyPattern/HelloCglib.wait ()V
     ACONST_NULL
     ARETURN
    L9
