@@ -1033,6 +1033,10 @@ public final class Integer extends Number implements Comparable<Integer> {
     public static final int SIZE = 32;
 
     /**
+     * 20210628
+     * 返回一个{@code int}值，在指定的{@code int}值中最高位（“最左边”）的位置最多只有一个一位。如果指定值在其二进制补码表示中没有一位，即如果它等于零，则返回零。
+     */
+    /**
      * Returns an {@code int} value with at most a single one-bit, in the
      * position of the highest-order ("leftmost") one-bit in the specified
      * {@code int} value.  Returns zero if the specified value has no
@@ -1044,13 +1048,25 @@ public final class Integer extends Number implements Comparable<Integer> {
      *     the specified value is itself equal to zero.
      * @since 1.5
      */
+    // 返回最高位为1其他位补0的数值
     public static int highestOneBit(int i) {
         // HD, Figure 3-1
+        // 右移1位, 让最高位后(含)2位为1, 移出去的不管
         i |= (i >>  1);
+
+        // 右移2位, 让最高位后(含)4位为1, 移出去的不管
         i |= (i >>  2);
+
+        // 右移4位, 让最高位后(含)8位为1, 移出去的不管
         i |= (i >>  4);
+
+        // 右移8位, 让最高位后(含)16位为1, 移出去的不管
         i |= (i >>  8);
+
+        // 右移16位, 让最高位后(含)32位为1, 移出去的不管
         i |= (i >> 16);
+
+        // 最后 - 再右移1位的结果, 得到最高位为1的数值
         return i - (i >>> 1);
     }
 

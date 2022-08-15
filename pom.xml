@@ -8,6 +8,12 @@
     <artifactId>my-jdk-7-source</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.7</java.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>cglib</groupId>
@@ -21,4 +27,21 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <!-- 代码使用的JDK版本 -->
+                    <source>${java.version}</source>
+                    <!-- 编译使用的JDK版本 -->
+                    <target>${java.version}</target>
+                    <!-- 代码使用的字符集 -->
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

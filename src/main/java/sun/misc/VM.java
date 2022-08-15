@@ -151,6 +151,10 @@ public class VM {
     private static volatile boolean booted = false;
     private static final Object lock = new Object();
 
+    /**
+     * 20210628
+     * 在返回之前由System.initializeSystemClass调用。 初始化期间调用的子系统可以检查此属性，以避免执行应等到应用程序类加载器设置完成的操作。
+     */
     // Invoked by by System.initializeSystemClass just before returning.
     // Subsystems that are invoked during initialization can check this
     // property in order to avoid doing things that should wait until the

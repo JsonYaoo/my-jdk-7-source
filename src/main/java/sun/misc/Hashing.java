@@ -232,6 +232,7 @@ public class Hashing {
      * @param string String to be hashed.
      * @return hash value of the string.
      */
+    // 返回指定字符串的 32 位哈希值。 该算法未指定，但将在 VM 实例中保持一致。
     public static int stringHash32(String string) {
         return Holder.LANG_ACCESS.getStringHash32(string);
     }
@@ -243,6 +244,7 @@ public class Hashing {
      * @param instance an object to use if desired in choosing value.
      * @return a non-zero 32-bit pseudo random value.
      */
+    // 返回一个非零的 32 位伪随机值。 {@code instance} 对象可以用作值的一部分。
     public static int randomHashSeed(Object instance) {
         int seed;
         if (sun.misc.VM.isBooted()) {
